@@ -49,12 +49,12 @@ def rescale_bboxes(out_bbox, size):
 # Pre-processing on Image
 def image_processing(image_path, model, transform, confidence = 0.9):
     im = Image.open(image_path)
-    img = transform(im).unsqueeze(0).to("cuda")
+    img = transform(im).unsqueeze(0)
 
     outputs = model(img)
-    probas = outputs['pred_logits'].softmax(-1)[0, :, :-1].cpu()
+    probas = outputs['pred_logits'].softmax(-1)[0, :, :-1]
     keep = probas.max(-1).values > confidence
-    bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep].cpu(), im.size)
+    bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], im.size)
 
     return probas[keep], bboxes_scaled
 
@@ -83,7 +83,7 @@ def add_bboxes(pil_img, prob, bboxes):
 def detect(image_path, confidence):
     # Load model
     model = torch.hub.load('facebookresearch/detr', 'detr_resnet101', pretrained=True)
-    model.eval().to(torch.device("cuda"))
+    model.eval()
 
     scores, boxes = image_processing(image_path, model, transform, confidence/100)
     im = cv2.imread(image_path)
